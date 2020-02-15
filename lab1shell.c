@@ -32,7 +32,7 @@ int main(){
 		else{
 			strcpy(cmd, "/bin/");
 			strcat(cmd, command);
-			execvp(cmd, parameters);
+			execvpe(cmd, parameters, envp);
 		}
 		
 		if(strcmp(command, "exit") == 0)
