@@ -9,9 +9,8 @@
 
 void type_prompt();
 
-void executableOnDisk(char someCommand); 	//execute command that is available on disk
-void builtIn(char anotherCommand);		//execute command that has been coded into shell
-void errorInput();			    	//run if error detected
+void executableOnDisk(char cmd[], char *par[]); 	//execute command that is available on disk
+//void builtIn(char anotherCommand);		//execute command that has been coded into shell
 
 
 int main(){
@@ -22,36 +21,28 @@ int main(){
 	while(continueMenu == 1){
 		type_prompt();
 		
-		read_command(command, parameters);
+		executableOnDisk(command, parameters);
 
-
-		scanf("%s", &selection);
-		getchar();			//strips off newline character
 		
-		if(selection == something){
-			executableOnDisk(something);
+		if(fork() != 0){
+			wait ( NULL)
 		}
-		else if(selection == something){
-			builtIn(something);      
+		else{
+			strcpy(cmd, "/bin/");
+			strcat(cmd, command);
+			execve(cmd, parameters, envp);
 		}
-		else if(selection == something){
-			continueMenu = 0;      
-		 }
-		else{ 				//test for invalid input
-			errorInput();
-		}
+		
+		if(strcmp(command, "exit") == 0)
+			break;
 	}
 	return 0;
 };
 
 
-void executableOnDisk(char someCommand); 	//execute command that is available on disk
-void builtIn(char anotherCommand);		//execute command that has been coded into shell
-void errorInput(){			        //run if error detected
-	fprintf("Invalid input.\n");
-}
 
-void type_prompt(){
+
+void type_prompt(){ 				//clear screen for shell
 	static int firstTime = 1;
 	if(firstTime == 1){
 		const char* CLEAR_SCREEN_ANSI = " \e[1;1H\e[2J";
@@ -60,3 +51,36 @@ void type_prompt(){
 	}
 	printf("#");
 }
+
+void executableOnDisk(char cmd[], char *par[]){	//execute command that is available on disk
+	char line[1024];
+	int count = 0, i = 0, j = 0;
+	char *array[100], *pch;
+	
+	//read one line
+	for(;;){
+		int c = fgetc(stdin);
+		line[count++] = (char) c;
+		if(c == '\n')
+			break;
+	}
+	if(count == 1)
+		return;
+	pch = strtok(line, "\n");
+	
+	//parse line into words
+	while(pch!=NULL){
+		array[i++] = strdup(pch);
+		pch = strtok(NULL, "\n");
+	}
+	//first word is the command
+	strcpy(cmd, array[0]);
+	
+	//others are parameters
+	for(int j = 0; j<i; j++)
+		par[j] = array[j];
+	par[i] = NULL; //NULL to terminate the parameter list
+}
+
+//void builtIn(char anotherCommand);		//execute command that has been coded into shell
+
