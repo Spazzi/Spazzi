@@ -15,16 +15,17 @@ int main(){
 
 
 		scanf("%f", &selection);
-		getchar();					//strips off newline character
+		getchar();	//strips off newline character
+		
 		if(selection == something){
 			executableOnDisk(something);
 		}
 		else if(selection == something){
-      builtIn(something);      
-    }
-    else if(selection == something){
-      continueMenu = 0;      
-    }
+			builtIn(something);      
+		}
+		else if(selection == something){
+			continueMenu = 0;      
+		 }
 		else{ 								//test for invalid input
 			errorInput();
 		}
