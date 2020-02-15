@@ -27,7 +27,7 @@ int main(){
 
 		
 		if(fork() != 0){
-			wait ( NULL)
+			wait (NULL);
 		}
 		else{
 			strcpy(cmd, "/bin/");
