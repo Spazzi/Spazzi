@@ -17,8 +17,10 @@ int main(){
 	int continueMenu = 1; 			//function is for when true, continue to run program, else stop.
 	
 	char cmd[100], command[100], *parameters[20]; //environment variables
+	
+	char *envp[] = {(char *) "PATH=/bin", 0};
 
-	while(continueMenu == 1){
+	while(1){
 		type_prompt();
 		
 		executableOnDisk(command, parameters);
@@ -30,7 +32,7 @@ int main(){
 		else{
 			strcpy(cmd, "/bin/");
 			strcat(cmd, command);
-			execve(cmd, parameters, envp);
+			execvp(cmd, parameters);
 		}
 		
 		if(strcmp(command, "exit") == 0)
