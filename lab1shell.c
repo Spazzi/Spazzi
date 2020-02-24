@@ -1,88 +1,130 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <string.h>
+#include <sys/types.h>
 
+#define MAXLINESIZE 1024
+#define STPTKNREAD " \t\r\n\a"
 
-//#include "someHeader.h"
+char *readLine(void){
 
-void type_prompt();
+	int size = MAXLINESIZE;
+	int count = 0;
+	char *buffer = malloc(sizeof(char) * size);
+	int c;
 
-void executableOnDisk(char cmd[], char *par[]); 	//execute command that is available on disk
-//void builtIn(char anotherCommand);		//execute command that has been coded into shell
-
-
-int main(){
-	int continueMenu = 1; 			//function is for when true, continue to run program, else stop.
-	
-	char cmd[100], command[100], *parameters[20]; //environment variables
-	
-	char *envp[] = {(char *) "PATH=/bin", 0};
+	if(!buffer){
+		fprintf(stderr, "Memory error\n");
+		exit(EXIT_FAILURE);
+	}
 
 	while(1){
-		type_prompt();
-		
-		executableOnDisk(command, parameters);
 
-		
-		if(fork() != 0){
-			wait (NULL);
+		c = getchar();
+
+		if(c == EOF){
+			exit(EXIT_SUCCESS);
+		}else if(c == '\n'){
+			buffer[count] = '\0';
+			return buffer;
+		}else{
+			buffer[count] = c;
 		}
-		else{
-			strcpy(cmd, "/bin/");
-			strcat(cmd, command);
-			execvpe(cmd, parameters, envp);
-		}
-		
-		if(strcmp(command, "exit") == 0)
-			break;
+
+		count++;
 	}
-	return 0;
-};
-
-
-
-
-void type_prompt(){ 				//clear screen for shell
-	static int firstTime = 1;
-	if(firstTime == 1){
-		const char* CLEAR_SCREEN_ANSI = " \e[1;1H\e[2J";
-		write(STDOUT_FILENO, CLEAR_SCREEN_ANSI,12);
-		firstTime = 0;
-	}
-	printf("#");
 }
 
-void executableOnDisk(char cmd[], char *par[]){	//execute command that is available on disk
-	char line[1024];
-	int count = 0, i = 0, j = 0;
-	char *array[100], *pch;
+
+char **makeTokens(char *line){
 	
-	//read one line
-	for(;;){
-		int c = fgetc(stdin);
-		line[count++] = (char) c;
-		if(c == '\n')
-			break;
+	int size = 64;
+	int count = 0;
+	char **tokens = malloc(size * sizeof(char*));
+	char *token;
+
+	if(!tokens){
+		fprintf(stderr, "Memory error\n");
+		exit(EXIT_FAILURE);
 	}
-	if(count == 1)
-		return;
-	pch = strtok(line, "\n");
-	
-	//parse line into words
-	while(pch!=NULL){
-		array[i++] = strdup(pch);
-		pch = strtok(NULL, "\n");
+
+	token = strtok(line, STPTKNREAD);	
+	while(token != NULL){
+		tokens[count] = token;
+		count++;
+		token = strtok(NULL, STPTKNREAD);
 	}
-	//first word is the command
-	strcpy(cmd, array[0]);
-	
-	//others are parameters
-	for(int j = 0; j<i; j++)
-		par[j] = array[j];
-	par[i] = NULL; //NULL to terminate the parameter list
+
+	tokens[count] = NULL;
+	return tokens;
 }
 
-//void builtIn(char anotherCommand);		//execute command that has been coded into shell
+int cd(char *path){
+	return chdir(path);
+}
 
+
+int runCmd(char **args){
+	
+	pid_t pid;
+	int status;
+
+	if(args[0] == NULL){
+		return 1;
+	}
+	
+	if(strcmp(args[0], "exit") == 0){
+		return 0;
+	}
+
+	if(strcmp(args[0], "cd") == 0){
+		if (cd(args[1]) == -1){
+			perror(args[1]);
+		}
+	}
+	if(strcmp(args[0], "cd") !=0){
+		pid = fork();
+		if(pid == 0){
+			if(execvp(args[0], args) == -1){
+				perror("Error");
+			}
+			exit(EXIT_FAILURE);
+		}else if(pid < 0){
+			perror("Error forking");
+		}else{
+			do{
+				waitpid(pid, &status, WUNTRACED);
+			}while(!WIFEXITED(status) && !WIFSIGNALED(status));
+		}
+	}
+
+	return 1;
+
+}
+	
+
+
+int main(int arc, char **argv){
+
+	char *line;
+	char **args;
+	int status;
+
+	printf("\033[H\033[J");
+
+	printf("Welcome to Evan and Liam's shell.\n");
+	printf("Type exit to end the shell\n");
+
+	do{
+		printf("# ");
+		line = readLine();
+		args = makeTokens(line);
+		status = runCmd(args);
+
+		free(line);
+		free(args);
+
+	}while(status);
+}
