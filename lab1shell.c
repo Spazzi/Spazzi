@@ -117,6 +117,8 @@ int runCmd(char **args){
 		pid_t pid;
 		int status;
 
+		char *str = "Hello world! I'm a clone!\n";
+
 		stack = (char *) malloc(SIZESTACK);
 		//end for clone variables
 
@@ -141,23 +143,7 @@ int runCmd(char **args){
 		
 		printf("Welp, there's your clone.\n");
 		
-		
-		if(pid == 0){
-			if(execvp(args[0], args) == -1){ 	//Executes the cmd given in the shell, with arguments
-				perror("Error");
-			}
-			exit(EXIT_FAILURE);
-		}else if(pid < 0){
-			perror("Error forking");
-		}else{
-			do{ 					//Causes shell to wait for the child to finish before continuing with parent processes
-				waitpid(pid, &status, WUNTRACED);
-			}while(!WIFEXITED(status) && !WIFSIGNALED(status));
 		}
-		
-		
-		}
-	}
 	
 	//If args is not cd, call fork to start a child process
 	if(strcmp(args[0], "cd") !=0){
@@ -175,12 +161,11 @@ int runCmd(char **args){
 			}while(!WIFEXITED(status) && !WIFSIGNALED(status));
 		}
 	}
-
 	return 1;
-
 }
 
-/********************* Main ***********************/
+
+
 int main(int arc, char **argv){
 	
 	char *line;
@@ -192,7 +177,6 @@ int main(int arc, char **argv){
 	char *stack;
 	char *stackhead;
 	pid_t pid;
-	int status;
 	
 	stack = (char *) malloc(SIZESTACK);
 	//end for clone variables
