@@ -141,6 +141,21 @@ int runCmd(char **args){
 		
 		printf("Welp, there's your clone.\n");
 		
+		
+		if(pid == 0){
+			if(execvp(args[0], args) == -1){ 	//Executes the cmd given in the shell, with arguments
+				perror("Error");
+			}
+			exit(EXIT_FAILURE);
+		}else if(pid < 0){
+			perror("Error forking");
+		}else{
+			do{ 					//Causes shell to wait for the child to finish before continuing with parent processes
+				waitpid(pid, &status, WUNTRACED);
+			}while(!WIFEXITED(status) && !WIFSIGNALED(status));
+		}
+		
+		
 		}
 	}
 	
@@ -164,16 +179,8 @@ int runCmd(char **args){
 	return 1;
 
 }
-	
-//Clone functionality
-int child_proc(void *arg){
-	printf("This is child process %s\n", (char *) arg);
-	return 0;
-}
 
-
-
-
+/********************* Main ***********************/
 int main(int arc, char **argv){
 	
 	char *line;
